@@ -7,6 +7,30 @@ import { CCTPBridgeTesting } from "src/testing/bridges/CCTPBridgeTesting.sol";
 import { CCTPForwarder }     from "src/forwarders/CCTPForwarder.sol";
 import { CCTPReceiver }      from "src/receivers/CCTPReceiver.sol";
 
+import { RecordedLogs } from "src/testing/utils/RecordedLogs.sol";
+
+contract DummyReceiver {
+
+    function handleReceiveMessage(
+        uint32,
+        bytes32,
+        bytes calldata
+    ) external pure returns (bool) {
+        return true;
+    }
+    
+}
+
+contract LogGenerator {
+
+    event DummyEvent();
+
+    function makeLogs(uint256 num) external {
+        for (uint256 i = 0; i < num; i++) emit DummyEvent();
+    }
+
+}
+
 contract CircleCCTPIntegrationTest is IntegrationBaseTest {
 
     using CCTPBridgeTesting for *;
@@ -14,6 +38,9 @@ contract CircleCCTPIntegrationTest is IntegrationBaseTest {
 
     uint32 sourceDomainId = CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM;
     uint32 destinationDomainId;
+
+    Domain destination2;
+    Bridge bridge2;
 
     // Use Optimism for failure tests as the code logic is the same
 
@@ -74,6 +101,56 @@ contract CircleCCTPIntegrationTest is IntegrationBaseTest {
     function test_polygon() public {
         destinationDomainId = CCTPForwarder.DOMAIN_ID_CIRCLE_POLYGON_POS;
         runCrossChainTests(getChain("polygon").createFork());
+    }
+
+    function test_multiple() public {
+        destination  = getChain("base").createFork();
+        destination2 = getChain("arbitrum_one").createFork();
+
+        destination.selectFork();
+        DummyReceiver r1 = new DummyReceiver();
+        destination2.selectFork();
+        DummyReceiver r2 = new DummyReceiver();
+
+        bridge  = CCTPBridgeTesting.createCircleBridge(source, destination);
+        bridge2 = CCTPBridgeTesting.createCircleBridge(source, destination2);
+
+        source.selectFork();
+
+        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ETHEREUM, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE, address(r1), "");
+        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ETHEREUM, CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE, address(r2), "");
+
+        bridge.relayMessagesToDestination(true);
+        bridge2.relayMessagesToDestination(true);
+    }
+
+    // TODO move this into a RecordedLogs testing file
+    function test_memory_oog() public {
+        destination  = getChain("base").createFork();
+        destination2 = getChain("arbitrum_one").createFork();
+
+        destination.selectFork();
+        DummyReceiver r1 = new DummyReceiver();
+        destination2.selectFork();
+        DummyReceiver r2 = new DummyReceiver();
+
+        bridge  = CCTPBridgeTesting.createCircleBridge(source, destination);
+        bridge2 = CCTPBridgeTesting.createCircleBridge(source, destination2);
+
+        source.selectFork();
+
+        // Generate a bunch of logs
+        LogGenerator gen = new LogGenerator();
+        gen.makeLogs(1000);
+
+        // Comment this out to see MemoryOOG error
+        RecordedLogs.clearLogs();
+
+        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ETHEREUM, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE, address(r1), "");
+        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ETHEREUM, CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE, address(r2), "");
+
+        bridge.relayMessagesToDestination(true);
+        bridge2.relayMessagesToDestination(true);
     }
 
     function initSourceReceiver() internal override returns (address) {

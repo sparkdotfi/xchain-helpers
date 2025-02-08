@@ -9,6 +9,7 @@ import { RecordedLogs }          from "../utils/RecordedLogs.sol";
 import { CCTPForwarder }         from "../../forwarders/CCTPForwarder.sol";
 
 interface IMessenger {
+    function localDomain() external view returns (uint32);
     function receiveMessage(bytes calldata message, bytes calldata attestation) external returns (bool success);
 }
 
@@ -77,7 +78,11 @@ library CCTPBridgeTesting {
 
         Vm.Log[] memory logs = bridge.ingestAndFilterLogs(true, SENT_MESSAGE_TOPIC, bridge.sourceCrossChainMessenger);
         for (uint256 i = 0; i < logs.length; i++) {
-            IMessenger(bridge.destinationCrossChainMessenger).receiveMessage(abi.decode(logs[i].data, (bytes)), "");
+            bytes memory message = abi.decode(logs[i].data, (bytes));
+            uint32 destinationDomain = getDestinationDomain(message);
+            if (destinationDomain == IMessenger(bridge.destinationCrossChainMessenger).localDomain()) {
+                IMessenger(bridge.destinationCrossChainMessenger).receiveMessage(message, "");
+            }
         }
 
         if (!switchToDestinationFork) {
@@ -90,11 +95,41 @@ library CCTPBridgeTesting {
         
         Vm.Log[] memory logs = bridge.ingestAndFilterLogs(false, SENT_MESSAGE_TOPIC, bridge.destinationCrossChainMessenger);
         for (uint256 i = 0; i < logs.length; i++) {
-            IMessenger(bridge.sourceCrossChainMessenger).receiveMessage(abi.decode(logs[i].data, (bytes)), "");
+            bytes memory message = abi.decode(logs[i].data, (bytes));
+            uint32 destinationDomain = getDestinationDomain(message);
+            if (destinationDomain == IMessenger(bridge.sourceCrossChainMessenger).localDomain()) {
+                IMessenger(bridge.sourceCrossChainMessenger).receiveMessage(message, "");
+            }
         }
 
         if (!switchToSourceFork) {
             bridge.destination.selectFork();
+        }
+    }
+
+    /**
+     * @notice Extracts the destinationDomain (a uint32) from a message.
+     * @param message The encoded message as a bytes array.
+     * @return destinationDomain The extracted destinationDomain.
+     *
+     * Message format:
+     * Field                 Bytes      Type       Index
+     * version               4          uint32     0
+     * sourceDomain          4          uint32     4
+     * destinationDomain     4          uint32     8
+     * nonce                 8          uint64     12
+     * sender                32         bytes32    20
+     * recipient             32         bytes32    52
+     * messageBody           dynamic    bytes      84
+     */
+    function getDestinationDomain(bytes memory message) public pure returns (uint32 destinationDomain) {
+        require(message.length >= 12, "Message too short");
+
+        assembly {
+            // Add 32 to skip the length word, then add 8 to reach the destinationDomain.
+            // mload loads 32 bytes starting from that position.
+            // The actual uint32 is in the top 4 bytes, so shift right by 224 bits.
+            destinationDomain := shr(224, mload(add(message, 40)))
         }
     }
 

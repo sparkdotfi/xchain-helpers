@@ -33,6 +33,11 @@ library RecordedLogs {
         return logs;
     }
 
+    function clearLogs() internal {
+        vm.getRecordedLogs();
+        vm.serializeJson("RECORDED_LOGS", "{}");
+    }
+
     function ingestAndFilterLogs(Bridge storage bridge, bool sourceToDestination, bytes32 topic0, bytes32 topic1, address emitter) internal returns (Vm.Log[] memory filteredLogs) {
         Vm.Log[] memory logs = RecordedLogs.getLogs();
         uint256 lastIndex = sourceToDestination ? bridge.lastSourceLogIndex : bridge.lastDestinationLogIndex;
