@@ -60,12 +60,11 @@ contract CircleCCTPIntegrationTest is IntegrationBaseTest {
         destinationDomainId = CCTPForwarder.DOMAIN_ID_CIRCLE_OPTIMISM;
         initBaseContracts(getChain("optimism").createFork());
 
-        vm.startPrank(randomAddress);
-        queueSourceToDestination(abi.encodeCall(MessageOrdering.push, (1)));
-        vm.stopPrank();
+        destination.selectFork();
 
+        vm.prank(bridge.destinationCrossChainMessenger);
         vm.expectRevert("CCTPReceiver/invalid-sourceAuthority");
-        relaySourceToDestination();
+        CCTPReceiver(destinationReceiver).handleReceiveMessage(0, bytes32(uint256(uint160(randomAddress))), abi.encodeCall(MessageOrdering.push, (1)));
     }
 
     function test_avalanche() public {
