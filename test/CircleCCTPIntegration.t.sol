@@ -11,11 +11,15 @@ import { RecordedLogs } from "src/testing/utils/RecordedLogs.sol";
 
 contract DummyReceiver {
 
+    bytes public message;
+
     function handleReceiveMessage(
         uint32,
         bytes32,
-        bytes calldata
-    ) external pure returns (bool) {
+        bytes calldata _message
+    ) external returns (bool) {
+        message = _message;
+
         return true;
     }
     
@@ -98,19 +102,26 @@ contract CircleCCTPIntegrationTest is IntegrationBaseTest {
 
         destination.selectFork();
         DummyReceiver r1 = new DummyReceiver();
+        assertEq(r1.message().length, 0);
         destination2.selectFork();
         DummyReceiver r2 = new DummyReceiver();
+        assertEq(r2.message().length, 0);
 
         bridge  = CCTPBridgeTesting.createCircleBridge(source, destination);
         bridge2 = CCTPBridgeTesting.createCircleBridge(source, destination2);
 
         source.selectFork();
 
-        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ETHEREUM, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE, address(r1), "");
-        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ETHEREUM, CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE, address(r2), "");
+        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ETHEREUM, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE, address(r1), abi.encode(1));
+        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ETHEREUM, CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE, address(r2), abi.encode(2));
 
         bridge.relayMessagesToDestination(true);
         bridge2.relayMessagesToDestination(true);
+
+        destination.selectFork();
+        assertEq(r1.message(), abi.encode(1));
+        destination2.selectFork();
+        assertEq(r2.message(), abi.encode(2));
     }
 
     function initSourceReceiver() internal override returns (address) {
