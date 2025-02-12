@@ -7,6 +7,24 @@ import { CCTPBridgeTesting } from "src/testing/bridges/CCTPBridgeTesting.sol";
 import { CCTPForwarder }     from "src/forwarders/CCTPForwarder.sol";
 import { CCTPReceiver }      from "src/receivers/CCTPReceiver.sol";
 
+import { RecordedLogs } from "src/testing/utils/RecordedLogs.sol";
+
+contract DummyReceiver {
+
+    bytes public message;
+
+    function handleReceiveMessage(
+        uint32,
+        bytes32,
+        bytes calldata _message
+    ) external returns (bool) {
+        message = _message;
+
+        return true;
+    }
+    
+}
+
 contract CircleCCTPIntegrationTest is IntegrationBaseTest {
 
     using CCTPBridgeTesting for *;
@@ -14,6 +32,9 @@ contract CircleCCTPIntegrationTest is IntegrationBaseTest {
 
     uint32 sourceDomainId = CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM;
     uint32 destinationDomainId;
+
+    Domain destination2;
+    Bridge bridge2;
 
     // Use Optimism for failure tests as the code logic is the same
 
@@ -43,12 +64,11 @@ contract CircleCCTPIntegrationTest is IntegrationBaseTest {
         destinationDomainId = CCTPForwarder.DOMAIN_ID_CIRCLE_OPTIMISM;
         initBaseContracts(getChain("optimism").createFork());
 
-        vm.startPrank(randomAddress);
-        queueSourceToDestination(abi.encodeCall(MessageOrdering.push, (1)));
-        vm.stopPrank();
+        destination.selectFork();
 
+        vm.prank(bridge.destinationCrossChainMessenger);
         vm.expectRevert("CCTPReceiver/invalid-sourceAuthority");
-        relaySourceToDestination();
+        CCTPReceiver(destinationReceiver).handleReceiveMessage(0, bytes32(uint256(uint160(randomAddress))), abi.encodeCall(MessageOrdering.push, (1)));
     }
 
     function test_avalanche() public {
@@ -74,6 +94,34 @@ contract CircleCCTPIntegrationTest is IntegrationBaseTest {
     function test_polygon() public {
         destinationDomainId = CCTPForwarder.DOMAIN_ID_CIRCLE_POLYGON_POS;
         runCrossChainTests(getChain("polygon").createFork());
+    }
+
+    function test_multiple() public {
+        destination  = getChain("base").createFork();
+        destination2 = getChain("arbitrum_one").createFork();
+
+        destination.selectFork();
+        DummyReceiver r1 = new DummyReceiver();
+        assertEq(r1.message().length, 0);
+        destination2.selectFork();
+        DummyReceiver r2 = new DummyReceiver();
+        assertEq(r2.message().length, 0);
+
+        bridge  = CCTPBridgeTesting.createCircleBridge(source, destination);
+        bridge2 = CCTPBridgeTesting.createCircleBridge(source, destination2);
+
+        source.selectFork();
+
+        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ETHEREUM, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE, address(r1), abi.encode(1));
+        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ETHEREUM, CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE, address(r2), abi.encode(2));
+
+        bridge.relayMessagesToDestination(true);
+        bridge2.relayMessagesToDestination(true);
+
+        destination.selectFork();
+        assertEq(r1.message(), abi.encode(1));
+        destination2.selectFork();
+        assertEq(r2.message(), abi.encode(2));
     }
 
     function initSourceReceiver() internal override returns (address) {
