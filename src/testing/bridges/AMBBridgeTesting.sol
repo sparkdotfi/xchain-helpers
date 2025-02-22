@@ -52,7 +52,7 @@ library AMBBridgeTesting {
     }
 
     function init(Bridge memory bridge) internal returns (Bridge memory) {
-        vm.recordLogs();
+        RecordedLogs.init();
 
          // Set minimum required signatures to zero for both domains
         bridge.destination.selectFork();

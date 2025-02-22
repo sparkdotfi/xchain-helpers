@@ -68,7 +68,7 @@ library CCTPBridgeTesting {
             0
         );
 
-        vm.recordLogs();
+        RecordedLogs.init();
 
         return bridge;
     }

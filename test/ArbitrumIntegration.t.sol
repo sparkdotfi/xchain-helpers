@@ -25,12 +25,10 @@ contract ArbitrumIntegrationTest is IntegrationBaseTest {
     function test_invalidSourceAuthority() public {
         initBaseContracts(getChain("arbitrum_one").createFork());
 
-        vm.startPrank(randomAddress);
-        queueSourceToDestination(abi.encodeCall(MessageOrdering.push, (1)));
-        vm.stopPrank();
-
+        destination.selectFork();
         vm.expectRevert("ArbitrumReceiver/invalid-l1Authority");
-        relaySourceToDestination();
+        vm.prank(randomAddress);
+        MessageOrdering(destinationReceiver).push(1);
     }
 
     function test_arbitrumOne() public {
