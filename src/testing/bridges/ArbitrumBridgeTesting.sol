@@ -91,7 +91,7 @@ library ArbitrumBridgeTesting {
     }
 
     function init(Bridge memory bridge) internal returns (Bridge memory) {
-        vm.recordLogs();
+        RecordedLogs.init();
 
         // Need to replace ArbSys contract with custom code to make it compatible with revm
         bridge.destination.selectFork();

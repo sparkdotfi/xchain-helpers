@@ -73,7 +73,7 @@ library OptimismBridgeTesting {
     }
 
     function init(Bridge memory bridge) internal returns (Bridge memory) {
-        vm.recordLogs();
+        RecordedLogs.init();
 
         // For consistency with other bridges
         bridge.source.selectFork();
