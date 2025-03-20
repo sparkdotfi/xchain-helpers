@@ -72,7 +72,7 @@ library RecordedLogs {
         vm.etch(STORAGE, deployed.code);
         vm.makePersistent(STORAGE);
         // The fork doesn't really matter we just use this to store the logs on the same place
-        RecordedLogsStorage(STORAGE).setForkId(vm.createFork("https://rpc.ankr.com/eth"));
+        RecordedLogsStorage(STORAGE).setForkId(vm.createFork(vm.envString("MAINNET_RPC_URL")));
 
         vm.recordLogs();
     }
