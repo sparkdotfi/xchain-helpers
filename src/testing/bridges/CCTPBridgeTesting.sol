@@ -8,8 +8,6 @@ import { Domain, DomainHelpers } from "../Domain.sol";
 import { RecordedLogs }          from "../utils/RecordedLogs.sol";
 import { CCTPForwarder }         from "../../forwarders/CCTPForwarder.sol";
 
-import { console } from "forge-std/console.sol";
-
 interface IMessenger {
     function localDomain() external view returns (uint32);
     function receiveMessage(bytes calldata message, bytes calldata attestation) external returns (bool success);
@@ -122,7 +120,6 @@ library CCTPBridgeTesting {
                 messageSourceDomain == destinationDomain &&
                 messageDestinationDomain == sourceDomain
             ) {
-                // console.log("MATCHED DESTINATION DOMAIN: %s", destinationDomain);
                 IMessenger(bridge.sourceCrossChainMessenger).receiveMessage(message, "");
             }
         }
