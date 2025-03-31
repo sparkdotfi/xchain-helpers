@@ -8,6 +8,8 @@ import { Domain, DomainHelpers } from "../Domain.sol";
 import { RecordedLogs }          from "../utils/RecordedLogs.sol";
 import { CCTPForwarder }         from "../../forwarders/CCTPForwarder.sol";
 
+import { console } from "forge-std/console.sol";
+
 interface IMessenger {
     function localDomain() external view returns (uint32);
     function receiveMessage(bytes calldata message, bytes calldata attestation) external returns (bool success);
@@ -21,7 +23,7 @@ library CCTPBridgeTesting {
     using RecordedLogs  for *;
 
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
-    
+
     function createCircleBridge(Domain memory source, Domain memory destination) internal returns (Bridge memory bridge) {
         return init(Bridge({
             source:                         source,
@@ -74,13 +76,24 @@ library CCTPBridgeTesting {
     }
 
     function relayMessagesToDestination(Bridge storage bridge, bool switchToDestinationFork) internal {
+        bridge.source.selectFork();
+        uint32 sourceDomain = IMessenger(bridge.sourceCrossChainMessenger).localDomain();
+
+        bridge.destination.selectFork();
+        uint32 destinationDomain = IMessenger(bridge.destinationCrossChainMessenger).localDomain();
+
         bridge.destination.selectFork();
 
         Vm.Log[] memory logs = bridge.ingestAndFilterLogs(true, SENT_MESSAGE_TOPIC, bridge.sourceCrossChainMessenger);
         for (uint256 i = 0; i < logs.length; i++) {
             bytes memory message = abi.decode(logs[i].data, (bytes));
-            uint32 destinationDomain = getDestinationDomain(message);
-            if (destinationDomain == IMessenger(bridge.destinationCrossChainMessenger).localDomain()) {
+            uint32 messageDestinationDomain = getDestinationDomain(message);
+            uint32 messageSourceDomain      = getSourceDomain(message);
+
+            if (
+                messageSourceDomain == sourceDomain &&
+                messageDestinationDomain == destinationDomain
+            ) {
                 IMessenger(bridge.destinationCrossChainMessenger).receiveMessage(message, "");
             }
         }
@@ -91,13 +104,25 @@ library CCTPBridgeTesting {
     }
 
     function relayMessagesToSource(Bridge storage bridge, bool switchToSourceFork) internal {
+        bridge.destination.selectFork();
+        uint32 destinationDomain = IMessenger(bridge.destinationCrossChainMessenger).localDomain();
+
         bridge.source.selectFork();
-        
+        uint32 sourceDomain = IMessenger(bridge.sourceCrossChainMessenger).localDomain();
+
         Vm.Log[] memory logs = bridge.ingestAndFilterLogs(false, SENT_MESSAGE_TOPIC, bridge.destinationCrossChainMessenger);
         for (uint256 i = 0; i < logs.length; i++) {
             bytes memory message = abi.decode(logs[i].data, (bytes));
-            uint32 destinationDomain = getDestinationDomain(message);
-            if (destinationDomain == IMessenger(bridge.sourceCrossChainMessenger).localDomain()) {
+            uint32 messageDestinationDomain = getDestinationDomain(message);
+            uint32 messageSourceDomain      = getSourceDomain(message);
+
+            // NOTE: When relaying messages to the source domain, `destinationDomain` is the domain of the source chain
+            //       and `sourceDomain` is the domain of the destination chain.
+            if (
+                messageSourceDomain == destinationDomain &&
+                messageDestinationDomain == sourceDomain
+            ) {
+                // console.log("MATCHED DESTINATION DOMAIN: %s", destinationDomain);
                 IMessenger(bridge.sourceCrossChainMessenger).receiveMessage(message, "");
             }
         }
@@ -130,6 +155,18 @@ library CCTPBridgeTesting {
             // mload loads 32 bytes starting from that position.
             // The actual uint32 is in the top 4 bytes, so shift right by 224 bits.
             destinationDomain := shr(224, mload(add(message, 40)))
+        }
+    }
+
+    // Uses same data structure as above for `message`
+    function getSourceDomain(bytes memory message) public pure returns (uint32 sourceDomain) {
+        require(message.length >= 8, "Message too short");
+
+        assembly {
+            // Add 32 to skip the length prefix, then add 4 bytes to reach sourceDomain
+            // mload loads 32 bytes starting at that location
+            // Since sourceDomain is a uint32 located at bytes 4–7, it's in the top 4 bytes of the word
+            sourceDomain := shr(224, mload(add(message, 36)))
         }
     }
 
