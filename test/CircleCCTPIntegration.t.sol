@@ -100,6 +100,8 @@ contract CircleCCTPIntegrationTest is IntegrationBaseTest {
         destination  = getChain("base").createFork();
         destination2 = getChain("arbitrum_one").createFork();
 
+        DummyReceiver r0 = new DummyReceiver();
+        assertEq(r0.message().length, 0);
         destination.selectFork();
         DummyReceiver r1 = new DummyReceiver();
         assertEq(r1.message().length, 0);
@@ -122,6 +124,19 @@ contract CircleCCTPIntegrationTest is IntegrationBaseTest {
         assertEq(r1.message(), abi.encode(1));
         destination2.selectFork();
         assertEq(r2.message(), abi.encode(2));
+
+        destination.selectFork();
+        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_BASE, CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM, address(r0), abi.encode(3));
+        destination2.selectFork();
+        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ARBITRUM_ONE, CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM, address(r0), abi.encode(4));
+        CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ARBITRUM_ONE, CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM, address(r0), abi.encode(5));
+
+        bridge.relayMessagesToDestination(true);
+        bridge2.relayMessagesToDestination(true);
+        bridge2.relayMessagesToSource(true);
+        bridge.relayMessagesToSource(true);
+
+        assertEq(r0.message(), abi.encode(3));
     }
 
     function initSourceReceiver() internal override returns (address) {

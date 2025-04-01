@@ -125,4 +125,25 @@ contract RecordedLogsTest is Test {
         assertEq(r1.data(), bytes("123"));
     }
 
+    function test_clearLogs() public {
+        // Verify clear logs works even on different forks
+        source = getChain("mainnet").createFork();
+        source.selectFork();
+
+        string memory label = "clearLogs";
+        LogGenerator gen = new LogGenerator(label);
+        gen.makeLogs(1);
+
+        Vm.Log[] memory logs = RecordedLogs.getLogs();
+
+        assertEq(logs.length, 1);
+        assertEq(logs[0].data, abi.encode(label, 0));
+
+        RecordedLogs.clearLogs();
+
+        Vm.Log[] memory logs2 = RecordedLogs.getLogs();
+
+        assertEq(logs2.length, 0);
+    }
+
 }
