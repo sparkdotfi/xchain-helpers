@@ -146,4 +146,39 @@ contract RecordedLogsTest is Test {
         assertEq(logs2.length, 0);
     }
 
+    function test_clearLogs_multichain() public {
+        // Verify clear logs works even on different forks
+        source      = getChain("mainnet").createFork();
+        destination = getChain("base").createFork();
+
+        source.selectFork();
+
+        string memory label1 = "logs1";
+        LogGenerator gen1 = new LogGenerator(label1);
+        gen1.makeLogs(1);
+
+        Vm.Log[] memory logs1 = RecordedLogs.getLogs();
+
+        assertEq(logs1.length, 1);
+        assertEq(logs1[0].data, abi.encode(label1, 0));
+
+        destination.selectFork();
+
+        string memory label2 = "logs2";
+        LogGenerator gen2 = new LogGenerator(label2);
+        gen2.makeLogs(1);
+
+        Vm.Log[] memory logs2 = RecordedLogs.getLogs();
+
+        assertEq(logs2.length, 2);
+        assertEq(logs2[0].data, abi.encode(label1, 0));
+        assertEq(logs2[1].data, abi.encode(label2, 0));
+
+        RecordedLogs.clearLogs();
+
+        Vm.Log[] memory logs3 = RecordedLogs.getLogs();
+
+        assertEq(logs3.length, 0);
+    }
+
 }

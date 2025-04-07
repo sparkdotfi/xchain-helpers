@@ -131,9 +131,17 @@ contract CircleCCTPIntegrationTest is IntegrationBaseTest {
         CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ARBITRUM_ONE, CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM, address(r0), abi.encode(4));
         CCTPForwarder.sendMessage(CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_ARBITRUM_ONE, CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM, address(r0), abi.encode(5));
 
+        assertEq(r0.message(), bytes(""));
+
         bridge.relayMessagesToDestination(true);
         bridge2.relayMessagesToDestination(true);
+
+        assertEq(r0.message(), bytes(""));
+
         bridge2.relayMessagesToSource(true);
+
+        assertEq(r0.message(), abi.encode(5));
+
         bridge.relayMessagesToSource(true);
 
         assertEq(r0.message(), abi.encode(3));
