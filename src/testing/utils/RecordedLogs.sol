@@ -122,8 +122,18 @@ library RecordedLogs {
     }
 
     function clearLogs() internal {
+        bool isActiveFork = false;
+        uint256 prevForkId;
+        try vm.activeFork() returns (uint256 forkId) {
+            prevForkId = forkId;
+            vm.selectFork(RecordedLogsStorage(STORAGE).forkId());
+            isActiveFork = true;
+        } catch {}
+
         vm.getRecordedLogs();
         RecordedLogsStorage(STORAGE).clearLogs();
+
+        if (isActiveFork) vm.selectFork(prevForkId);
     }
 
     function ingestAndFilterLogs(Bridge storage bridge, bool sourceToDestination, bytes32 topic0, bytes32 topic1, address emitter) internal returns (Vm.Log[] memory filteredLogs) {
