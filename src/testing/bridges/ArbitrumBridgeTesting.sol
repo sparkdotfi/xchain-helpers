@@ -3,7 +3,7 @@ pragma solidity >=0.8.0;
 
 import { Vm }        from "forge-std/Vm.sol";
 
-import { Bridge }                from "../Bridge.sol";
+import { Bridge, BridgeType }    from "../Bridge.sol";
 import { Domain, DomainHelpers } from "../Domain.sol";
 import { RecordedLogs }          from "../utils/RecordedLogs.sol";
 import { ArbitrumForwarder }     from "../../forwarders/ArbitrumForwarder.sol";
@@ -60,6 +60,7 @@ library ArbitrumBridgeTesting {
         ) = getMessengerFromChainAlias(ethereum.chain.chainAlias, arbitrumInstance.chain.chainAlias);
 
         return init(Bridge({
+            bridgeType:                     BridgeType.ARBITRUM,
             source:                         ethereum,
             destination:                    arbitrumInstance,
             sourceCrossChainMessenger:      sourceCrossChainMessenger,

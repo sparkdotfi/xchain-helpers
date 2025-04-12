@@ -3,7 +3,7 @@ pragma solidity >=0.8.0;
 
 import { Vm }        from "forge-std/Vm.sol";
 
-import { Bridge }                from "../Bridge.sol";
+import { Bridge, BridgeType }    from "../Bridge.sol";
 import { Domain, DomainHelpers } from "../Domain.sol";
 import { RecordedLogs }          from "../utils/RecordedLogs.sol";
 
@@ -30,6 +30,7 @@ library AMBBridgeTesting {
     
     function createGnosisBridge(Domain memory source, Domain memory destination) internal returns (Bridge memory bridge) {
         return init(Bridge({
+            bridgeType:                     BridgeType.AMB,
             source:                         source,
             destination:                    destination,
             sourceCrossChainMessenger:      getGnosisMessengerFromChainAlias(source.chain.chainAlias),

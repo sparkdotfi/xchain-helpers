@@ -3,7 +3,7 @@ pragma solidity >=0.8.0;
 
 import { Vm }        from "forge-std/Vm.sol";
 
-import { Bridge }                from "../Bridge.sol";
+import { Bridge, BridgeType }    from "../Bridge.sol";
 import { Domain, DomainHelpers } from "../Domain.sol";
 import { RecordedLogs }          from "../utils/RecordedLogs.sol";
 import { CCTPForwarder }         from "../../forwarders/CCTPForwarder.sol";
@@ -24,6 +24,7 @@ library CCTPBridgeTesting {
     
     function createCircleBridge(Domain memory source, Domain memory destination) internal returns (Bridge memory bridge) {
         return init(Bridge({
+            bridgeType:                     BridgeType.CCTP,
             source:                         source,
             destination:                    destination,
             sourceCrossChainMessenger:      getCircleMessengerFromChainAlias(source.chain.chainAlias),
