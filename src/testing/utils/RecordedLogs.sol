@@ -64,6 +64,10 @@ library RecordedLogs {
     address private constant STORAGE = address(uint160(uint256(keccak256("__RecordedLogsStorage__"))));
 
     function init() internal {
+        if (STORAGE.code.length > 0) {
+            return;
+        }
+
         bytes memory bytecode = vm.getCode("RecordedLogs.sol:RecordedLogsStorage");
         address deployed;
         assembly {
