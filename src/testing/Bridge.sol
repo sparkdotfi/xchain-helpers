@@ -3,13 +3,21 @@ pragma solidity >=0.8.0;
 
 import { Domain } from "./Domain.sol";
 
+enum BridgeType {
+    OPTIMISM,
+    ARBITRUM,
+    CCTP,
+    AMB
+}
+
 struct Bridge {
-    Domain  source;
-    Domain  destination;
-    address sourceCrossChainMessenger;
-    address destinationCrossChainMessenger;
+    BridgeType bridgeType;
+    Domain     source;
+    Domain     destination;
+    address    sourceCrossChainMessenger;
+    address    destinationCrossChainMessenger;
     // These are used internally for log tracking
     uint256 lastSourceLogIndex;
     uint256 lastDestinationLogIndex;
-    bytes extraData;
+    bytes   extraData;
 }

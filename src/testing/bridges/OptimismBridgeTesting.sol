@@ -3,7 +3,7 @@ pragma solidity >=0.8.0;
 
 import { Vm }        from "forge-std/Vm.sol";
 
-import { Bridge }                from "../Bridge.sol";
+import { Bridge, BridgeType }    from "../Bridge.sol";
 import { Domain, DomainHelpers } from "../Domain.sol";
 import { RecordedLogs }          from "../utils/RecordedLogs.sol";
 import { OptimismForwarder }     from "../../forwarders/OptimismForwarder.sol";
@@ -40,6 +40,7 @@ library OptimismBridgeTesting {
         ) = getMessengerFromChainAlias(ethereum.chain.chainAlias, optimismInstance.chain.chainAlias);
 
         return init(Bridge({
+            bridgeType:                     BridgeType.OPTIMISM,
             source:                         ethereum,
             destination:                    optimismInstance,
             sourceCrossChainMessenger:      sourceCrossChainMessenger,
