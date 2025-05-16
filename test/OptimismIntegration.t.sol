@@ -56,6 +56,15 @@ contract OptimismIntegrationTest is IntegrationBaseTest {
         runCrossChainTests(getChain("world_chain").createFork());
     }
 
+    function test_unichain() public {
+        setChain("unichain", ChainData({
+            name: "Unichain",
+            rpcUrl: vm.envString("UNICHAIN_RPC_URL"),
+            chainId: 130
+        }));
+        runCrossChainTests(getChain("unichain").createFork());
+    }
+
     function initSourceReceiver() internal override pure returns (address) {
         return address(0);
     }

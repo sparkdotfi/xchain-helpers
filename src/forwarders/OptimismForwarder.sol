@@ -7,9 +7,11 @@ interface ICrossDomainOptimism {
 
 library OptimismForwarder {
 
-    address constant internal L1_CROSS_DOMAIN_OPTIMISM    = 0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1;
     address constant internal L1_CROSS_DOMAIN_BASE        = 0x866E82a600A1414e583f7F13623F1aC5d58b0Afa;
+    address constant internal L1_CROSS_DOMAIN_OPTIMISM    = 0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1;
+    address constant internal L1_CROSS_DOMAIN_UNICHAIN    = 0x9A3D64E386C18Cb1d6d5179a9596A4B5736e98A6;
     address constant internal L1_CROSS_DOMAIN_WORLD_CHAIN = 0xf931a81D18B1766d15695ffc7c1920a62b7e710a;
+    
     address constant internal L2_CROSS_DOMAIN             = 0x4200000000000000000000000000000000000007;
 
     function sendMessageL1toL2(
