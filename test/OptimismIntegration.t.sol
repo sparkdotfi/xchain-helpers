@@ -60,7 +60,7 @@ contract OptimismIntegrationTest is IntegrationBaseTest {
         setChain("unichain", ChainData({
             name: "Unichain",
             rpcUrl: vm.envString("UNICHAIN_RPC_URL"),
-            chainId: 480
+            chainId: 10
         }));
         runCrossChainTests(getChain("unichain").createFork());
     }
