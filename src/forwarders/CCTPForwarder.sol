@@ -17,6 +17,7 @@ library CCTPForwarder {
     address constant internal MESSAGE_TRANSMITTER_CIRCLE_ARBITRUM_ONE = 0xC30362313FBBA5cf9163F0bb16a0e01f01A896ca;
     address constant internal MESSAGE_TRANSMITTER_CIRCLE_BASE         = 0xAD09780d193884d503182aD4588450C416D6F9D4;
     address constant internal MESSAGE_TRANSMITTER_CIRCLE_POLYGON_POS  = 0xF3be9355363857F3e001be68856A2f96b4C39Ba9;
+    address constant internal MESSAGE_TRANSMITTER_CIRCLE_UNICHAIN     = 0x353bE9E2E38AB1D19104534e4edC21c643Df86f4;
 
     uint32 constant internal DOMAIN_ID_CIRCLE_ETHEREUM     = 0;
     uint32 constant internal DOMAIN_ID_CIRCLE_AVALANCHE    = 1;
@@ -26,6 +27,7 @@ library CCTPForwarder {
     uint32 constant internal DOMAIN_ID_CIRCLE_SOLANA       = 5;
     uint32 constant internal DOMAIN_ID_CIRCLE_BASE         = 6;
     uint32 constant internal DOMAIN_ID_CIRCLE_POLYGON_POS  = 7;
+    uint32 constant internal DOMAIN_ID_CIRCLE_UNICHAIN     = 10;
 
     function sendMessage(
         address messageTransmitter,

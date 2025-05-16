@@ -49,6 +49,8 @@ library CCTPBridgeTesting {
             return CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_BASE;
         } else if (name == keccak256("polygon")) {
             return CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_POLYGON_POS;
+        } else if (name == keccak256("unichain")) {
+            return CCTPForwarder.MESSAGE_TRANSMITTER_CIRCLE_UNICHAIN;
         } else {
             revert("Unsupported chain");
         }
