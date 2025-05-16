@@ -67,6 +67,8 @@ library OptimismBridgeTesting {
             sourceCrossChainMessenger = OptimismForwarder.L1_CROSS_DOMAIN_BASE;
         } else if (name == keccak256("world_chain")) {
             sourceCrossChainMessenger = OptimismForwarder.L1_CROSS_DOMAIN_WORLD_CHAIN;
+        } else if (name == keccak256("unichain")) {
+            sourceCrossChainMessenger = OptimismForwarder.L1_CROSS_DOMAIN_UNICHAIN;
         } else {
             revert("Unsupported destination chain");
         }
