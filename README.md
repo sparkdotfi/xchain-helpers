@@ -19,4 +19,3 @@ Most receivers implement a `fallback()` function which after validating that the
 Provides tooling to record messages sent to supported bridges and relay them on the other side simulating a real message going across.
 
 ***
-*The IP in this repository was assigned to Mars SPC Limited in respect of the MarsOne SP*
