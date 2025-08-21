@@ -103,6 +103,9 @@ library LZBridgeTesting {
     function init(Bridge memory bridge) internal returns (Bridge memory) {
         RecordedLogs.init();
 
+        // For consistency with other bridges
+        bridge.source.selectFork();
+
         return bridge;
     }
 
