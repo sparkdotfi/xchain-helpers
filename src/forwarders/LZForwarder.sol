@@ -47,14 +47,14 @@ library LZForwarder {
 
     function sendMessage(
         uint32               _dstEid,
-        bytes32              _peer,
+        bytes32              _receiver,
         ILayerZeroEndpointV2 endpoint,
         bytes         memory _message,
         bytes         memory _options
     ) internal {
         MessagingParams memory params = MessagingParams({
             dstEid:       _dstEid,
-            receiver:     _peer,
+            receiver:     _receiver,
             message:      _message,
             options:      _options,
             payInLzToken: false
