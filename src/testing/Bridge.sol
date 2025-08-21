@@ -7,7 +7,8 @@ enum BridgeType {
     OPTIMISM,
     ARBITRUM,
     CCTP,
-    AMB
+    AMB,
+    LZ
 }
 
 struct Bridge {
