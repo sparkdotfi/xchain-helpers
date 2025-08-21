@@ -43,7 +43,7 @@ contract LZReceiver {
         address,  // _executor,
         bytes calldata  // _extraData
     ) external {
-        require(msg.sender == destinationEndpoint,   "LZReceiver/invalid-sender");
+        require(msg.sender == destinationEndpoint, "LZReceiver/invalid-sender");
         require(_origin.srcEid == srcEid,          "LZReceiver/invalid-srcEid");
         require(_origin.sender == sourceAuthority, "LZReceiver/invalid-sourceAuthority");
 
