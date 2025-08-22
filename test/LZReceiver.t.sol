@@ -112,32 +112,32 @@ contract LZReceiverTest is Test {
 
     function test_allowInitializePath() public view {
         // Should return true when origin.srcEid == srcEid and origin.sender == sourceAuthority
-        assertEq(receiver.allowInitializePath(Origin({
+        assertTrue(receiver.allowInitializePath(Origin({
             srcEid: srcEid,
             sender: bytes32(uint256(uint160(sourceAuthority))),
             nonce:  1
-        })), true);
+        })));
 
         // Should return false when origin.srcEid != srcEid
-        assertEq(receiver.allowInitializePath(Origin({
+        assertFalse(receiver.allowInitializePath(Origin({
             srcEid: srcEid + 1,
             sender: bytes32(uint256(uint160(sourceAuthority))),
             nonce:  1
-        })), false);
+        })));
 
         // Should return false when origin.sender != sourceAuthority
-        assertEq(receiver.allowInitializePath(Origin({
+        assertFalse(receiver.allowInitializePath(Origin({
             srcEid: srcEid,
             sender: bytes32(uint256(uint160(randomAddress))),
             nonce:  1
-        })), false);
+        })));
 
         // Should return false when origin.srcEid != srcEid and origin.sender != sourceAuthority
-        assertEq(receiver.allowInitializePath(Origin({
+        assertFalse(receiver.allowInitializePath(Origin({
             srcEid: srcEid + 1,
             sender: bytes32(uint256(uint160(randomAddress))),
             nonce:  1
-        })), false);
+        })));
     }
     
 }
