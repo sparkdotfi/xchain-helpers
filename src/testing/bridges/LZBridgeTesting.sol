@@ -120,6 +120,9 @@ library LZBridgeTesting {
         Vm.Log[] memory logs = bridge.ingestAndFilterLogs(true, PACKET_SENT_TOPIC, bridge.sourceCrossChainMessenger);
         for (uint256 i = 0; i < logs.length; i++) {
             ( bytes memory encodedPacket,, ) = abi.decode(logs[i].data, (bytes, bytes, address));
+
+            // Step 1: Parse data from encoded packet in event
+
             uint32 destinationEid = getDestinationEid(encodedPacket);
             bytes32 guid = getGuid(encodedPacket);
             bytes memory message = getMessage(encodedPacket);
@@ -127,6 +130,8 @@ library LZBridgeTesting {
             if (destinationEid == IEndpoint(bridge.destinationCrossChainMessenger).eid()) {
                 ( , address destinationReceiveLibrary ) = abi.decode(bridge.extraData, (address, address));
                 bytes32 payloadHash = keccak256(abi.encodePacked(guid, message));
+
+                // Step 2: Prank as destinationReceiveLibrary to bypass DVN verification step, required before lzReceive can be called
 
                 vm.startPrank(destinationReceiveLibrary);
                 IEndpoint(bridge.destinationCrossChainMessenger).verify(
@@ -139,6 +144,8 @@ library LZBridgeTesting {
                     payloadHash
                 );
                 vm.stopPrank();
+
+                // Step 3: Call permissionless lzReceive on endpoint now that payload is verified
 
                 IEndpoint(bridge.destinationCrossChainMessenger).lzReceive(
                     Origin({
@@ -170,13 +177,18 @@ library LZBridgeTesting {
         Vm.Log[] memory logs = bridge.ingestAndFilterLogs(false, PACKET_SENT_TOPIC, bridge.destinationCrossChainMessenger);
         for (uint256 i = 0; i < logs.length; i++) {
             ( bytes memory encodedPacket,, ) = abi.decode(logs[i].data, (bytes, bytes, address));
-            uint32 destinationEid = getDestinationEid(encodedPacket);
+
+            // Step 1: Parse data from encoded packet in event
+
+            uint32 destinationEid = getDestinationEid(encodedPacket);  // NOTE: destinationEid in this case is for the source endpoint ID
             bytes32 guid = getGuid(encodedPacket);
             bytes memory message = getMessage(encodedPacket);
 
             if (destinationEid == IEndpoint(bridge.sourceCrossChainMessenger).eid()) {
                 ( address sourceReceiveLibrary, ) = abi.decode(bridge.extraData, (address, address));
                 bytes32 payloadHash = keccak256(abi.encodePacked(guid, message));
+
+                // Step 2: Prank as destinationReceiveLibrary to bypass DVN verification step, required before lzReceive can be called
 
                 vm.startPrank(sourceReceiveLibrary);
                 IEndpoint(bridge.sourceCrossChainMessenger).verify(
@@ -189,6 +201,8 @@ library LZBridgeTesting {
                     payloadHash
                 );
                 vm.stopPrank();
+
+                // Step 3: Call permissionless lzReceive on endpoint now that payload is verified
 
                 IEndpoint(bridge.sourceCrossChainMessenger).lzReceive(
                     Origin({
