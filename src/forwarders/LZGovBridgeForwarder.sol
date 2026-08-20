@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.0;
 
-import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import { IERC20 }    from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
 struct TxParams {
     uint32  dstEid;
@@ -63,7 +64,7 @@ library LZGovBridgeForwarder {
         address lzToken
     ) internal returns (MessagingReceipt memory) {
 
-        if (fee.lzTokenFee > 0) IERC20(lzToken).approve(govOapp, fee.lzTokenFee);
+        if (fee.lzTokenFee > 0) SafeERC20.forceApprove(IERC20(lzToken), govOapp, fee.lzTokenFee);
 
         return IGovOapp(govOapp).sendTx{ value: fee.nativeFee }({
             _params: TxParams({
